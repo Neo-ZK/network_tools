@@ -10,6 +10,10 @@ import random
 import signal
 import sys
 import os
+import logging
+
+LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+logging.basicConfig(filename='client.log', level=logging.DEBUG, format=LOG_FORMAT)
 
 INTERVAL = 1000  #unit ms
 LEN =64
@@ -100,6 +104,7 @@ while True:
 			recv_data,addr = sock.recvfrom(65536)
 			if recv_data== payload.encode()  and addr[0]==IP and addr[1]==PORT:
 				rtt=((time.time()-time_of_send)*1000)
+				logging.debug("Reply from %s, seq=%d, time=%.2fms" % (IP, count, rtt))
 				print("Reply from",IP,"seq=%d"%count, "time=%.2f"%(rtt),"ms")
 				sys.stdout.flush()
 				received=1

@@ -28,13 +28,17 @@ rtt_sum=0.0
 rtt_min=99999999.0
 rtt_max=0.0
 
-def int2byte4(x):
-    return chr((x >> 24) & 0xFF) + chr((x >> 16) & 0xFF) + chr((x >> 8) & 0xFF) + chr(x & 0xFF)
+def int2byte8(x):
+    return chr((x >> 56) & 0xFF) + chr((x >> 48) & 0xFF) + chr((x >> 40) & 0xFF) + chr(x >> 32 & 0xFF) + chr((x >> 24) & 0xFF) + chr((x >> 16) & 0xFF) + chr((x >> 8) & 0xFF) + chr(x & 0xFF)
 
-def byte42int(str):
-    arr = struct.unpack('>BBBB', str)
-    res = (arr[0] << 24) | (arr[1] << 16) |(arr[2] << 8) |arr[3]
+def byte82int(str):
+    arr = struct.unpack('>BBBBBBBB', str)
+    res = (arr[0] << 56) | (arr[1] << 48) |(arr[2] << 40) | (arr[3] << 32) | (arr[4] << 24) | (arr[5] << 16) |(arr[6] << 8) | arr[7]
     return res
+
+def get_curr_time_ms():
+    return int(time.time() * 1000)
+
 
 def signal_handler(signal, frame):
     if count!=0 and count_of_received!=0:
@@ -50,8 +54,8 @@ def random_string(length):
         return ''.join(random.choice(string.ascii_letters+ string.digits ) for m in range(length))
 
 def gen_packet(seq, timestamp, length):
-    seq_b = int2byte4(seq)
-    timestamp_b = int2byte4(timestamp)
+    seq_b = int2byte8(seq)
+    timestamp_b = int2byte8(timestamp)
     payload_len = length - len(seq_b) - len(timestamp_b)
     payload = random_string(payload_len)
     packet = seq_b + timestamp_b + payload.encode()
@@ -111,20 +115,20 @@ sys.stdout.flush()
 while True:
     for i in range(0, BURST):
         count += 1
-        timestamp = int(time.time())
+        timestamp = get_curr_time_ms()
         packet = gen_packet(count, timestamp, LEN)
         print("Send to %s:%s, seq=%d" % (IP, PORT, count))
         logging.debug("Send to %s:%s, seq=%d" % (IP, PORT, count))
         sock.sendto(packet, (IP, PORT))
 
-    time_of_send = time.time()
-    deadline = time.time() + INTERVAL/1000.0
+    time_of_send = get_curr_time_ms()
+    deadline = get_curr_time_ms() + INTERVAL
 
     recv_num = 0
     while True:
         received = 0
         rtt = 0.0
-        timeout=deadline - time.time()
+        timeout = deadline - get_curr_time_ms()
         if timeout <0:
             break
         #print "timeout=",timeout
@@ -132,8 +136,8 @@ while True:
         try:
             recv_data,addr = sock.recvfrom(65536)
             if len(recv_data) == LEN and addr[0]==IP and addr[1]==PORT:
-                recv_seq = byte42int(recv_data[0:4])
-                rtt =  time.time() - byte42int(recv_data[4:8])
+                recv_seq = byte82int(recv_data[0:8])
+                rtt =  get_curr_time_ms() - byte82int(recv_data[8:16])
                 logging.debug("Reply from %s, seq=%d, time=%.2fms" % (IP, recv_seq, rtt))
                 print("Reply from %s, seq=%d, time=%.2fms" % (IP, recv_seq, rtt))
                 sys.stdout.flush()
@@ -151,10 +155,18 @@ while True:
             rtt_min = min(rtt_min,rtt)
         else:
             print("Request timed out")
+            logging.debug("Request timed out")
             sys.stdout.flush()
 
-        if (recv_num == BURST):
-            time_remaining = deadline - time.time()
-            if (time_remaining > 0):
-                time.sleep(time_remaining)
-            break
+        time_remaining = deadline - get_curr_time_ms()
+        if (time_remaining > 0):
+            if (recv_num == BURST):
+                time.sleep(time_remaining / 1000)
+                recv_num = 0
+        else:
+            if (recv_num < BURST):
+                print("Request timed out, recv num is: %d" % recv_num)
+                logging.debug("Request timed out, recv num is: %d" % recv_num)
+                recv_num = 0
+
+        break

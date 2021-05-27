@@ -121,15 +121,13 @@ while True:
         logging.debug("Send to %s:%s, seq=%d" % (IP, PORT, count))
         sock.sendto(packet, (IP, PORT))
 
-    time_of_send = get_curr_time_ms()
     deadline = get_curr_time_ms() + INTERVAL
-
     recv_num = 0
     while True:
         received = 0
         rtt = 0.0
         timeout = deadline - get_curr_time_ms()
-        if timeout <0:
+        if timeout < 0:
             break
         #print "timeout=",timeout
         sock.settimeout(timeout)
@@ -159,6 +157,7 @@ while True:
             sys.stdout.flush()
 
         time_remaining = deadline - get_curr_time_ms()
+        print("time_remaining:",float(time_remaining/1000))
         if (time_remaining > 0):
             if (recv_num == BURST):
                 time.sleep(time_remaining / 1000)

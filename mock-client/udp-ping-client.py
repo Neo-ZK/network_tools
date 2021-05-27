@@ -156,16 +156,18 @@ while True:
             logging.debug("Request timed out")
             sys.stdout.flush()
 
-        time_remaining = deadline - get_curr_time_ms()
-        print("time_remaining:",float(time_remaining/1000))
-        if (time_remaining > 0):
-            if (recv_num == BURST):
-                time.sleep(time_remaining / 1000)
-                recv_num = 0
-        else:
-            if (recv_num < BURST):
+        if (recv_num < BURST):
+            time_remaining = deadline - get_curr_time_ms()
+            if (time_remaining > 0):
+                continue
+            else:
                 print("Request timed out, recv num is: %d" % recv_num)
                 logging.debug("Request timed out, recv num is: %d" % recv_num)
                 recv_num = 0
-
-        break
+                break
+        else:
+            time_remaining = deadline - get_curr_time_ms()
+            if (time_remaining > 0):
+                time.sleep(time_remaining / 1000)
+                recv_num = 0
+                break

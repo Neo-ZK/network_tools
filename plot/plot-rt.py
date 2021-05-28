@@ -7,6 +7,7 @@ import time
 file = sys.argv[1]
 time_arr = []
 rtt_arr = []
+rtt_min = 999999
 link_able_arr = []
 burst = 1
 exit_tag = 0
@@ -53,8 +54,11 @@ for i in range(1, 149593):
         rtt = info_arr_2[9].split("=")[1]
         rtt = float(rtt[:len(rtt)-3])
         rtt_arr.append(rtt)
+        if (rtt < rtt_min):
+            rtt_min = rtt
 
 f.close()
+print("rtt_min is:", rtt_min)
 
 start_time_string = time_arr[0]
 end_time_string = time_arr[len(time_arr) - 1]
@@ -62,11 +66,10 @@ axis_x = pd.date_range(start=start_time_string, end=end_time_string, periods = l
 
 #axis_x = axis_x.strftime('%H:%M:%S')
 
-#plt.ylim(200, 400)
-#plt.plot(axis_x, rtt_arr)
-#plt.ylabel('ms')
-#plt.xlabel('format: day hour:min')
-#plt.axis([0, axis_x[len(axis_x)-1], 200, 400])
+plt.ylim(200, 400)
+plt.plot(axis_x, rtt_arr)
+plt.ylabel('ms')
+plt.xlabel('format: day hour:min')
 
-plt.plot(axis_x, link_able_arr)
+# plt.plot(axis_x, link_able_arr)
 plt.show()

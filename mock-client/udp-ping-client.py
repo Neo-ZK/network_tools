@@ -126,7 +126,7 @@ while True:
     while True:
         received = 0
         rtt = 0.0
-        timeout = deadline - get_curr_time_ms()
+        timeout = float((deadline - get_curr_time_ms()))/1000.0
         if timeout < 0:
             break
         #print "timeout=",timeout
@@ -142,8 +142,12 @@ while True:
                 received = 1
                 recv_num = recv_num + 1
         except socket.timeout:
+            print("Request timed out, recv num is: %d" % recv_num)
+            logging.debug("Request timed out, recv num is: %d" % recv_num)
             break
         except :
+            print("unkonw err, recv num is: %d" % recv_num)
+            logging.debug("unkonw err, recv num is: %d" % recv_num)
             pass
 
         if received == 1:

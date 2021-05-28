@@ -33,3 +33,5 @@ while True:
         print('Received from %s, len is %d, seq is %d, rt is %f' % (addr, len(data), seq, rt))
         logging.debug('Received from %s, len is %d, seq is %d, rt is %f' % (addr, len(data), seq, rt))
         sent = s.sendto(data, addr)
+        print('Send to %s, len is %d, seq is %d, rt is %f' % (addr, sent, seq, rt))
+        logging.debug('Send to %s, len is %d, seq is %d, rt is %f' % (addr, sent, seq, rt))

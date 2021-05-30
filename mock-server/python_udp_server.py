@@ -9,7 +9,7 @@ import time
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 # 绑定端口:
-s.bind(('127.0.0.1', 5002))
+s.bind(('', 5002))
 
 print('Bind UDP on 5002...')
 
